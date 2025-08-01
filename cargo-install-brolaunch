@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Custom cargo command to install brolaunch
+# Usage: cargo install-brolaunch
+
+set -e
+
+echo "Building and installing brolaunch..."
+
+# Build in release mode
+cargo build --release
+
+# Create destination directory
+INSTALL_DIR="$HOME/.local/bin"
+mkdir -p "$INSTALL_DIR"
+
+# Copy binary
+cp target/release/brolaunch "$INSTALL_DIR/"
+
+# Make executable
+chmod +x "$INSTALL_DIR/brolaunch"
+
+# Create config directory
+CONFIG_DIR="$HOME/.config"
+mkdir -p "$CONFIG_DIR"
+
+# Copy default config if it doesn't exist
+if [ ! -f "$CONFIG_DIR/brolaunch.yaml" ]; then
+    echo "Installing default config to $CONFIG_DIR/brolaunch.yaml"
+    cp config.yaml "$CONFIG_DIR/brolaunch.yaml"
+    
+    # Update paths in config to use actual user home
+    sed -i "s|/home/user|$HOME|g" "$CONFIG_DIR/brolaunch.yaml"
+else
+    echo "Config file already exists at $CONFIG_DIR/brolaunch.yaml"
+fi
+
+echo "✅ brolaunch installed successfully!"
+echo "Binary: $INSTALL_DIR/brolaunch"
+echo "Config: $CONFIG_DIR/brolaunch.yaml"
+echo ""
+echo "Make sure $INSTALL_DIR is in your PATH:"
+echo "export PATH=\"\$HOME/.local/bin:\$PATH\""

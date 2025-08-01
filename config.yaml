@@ -1,0 +1,50 @@
+chromium_binary: "/usr/lib/chromium/chromium"
+# Alternative chromium binary paths for different distros:
+# chromium_binary: "/usr/lib/chromium/chromium"        # Arch Linux (avoids wrapper)
+# chromium_binary: "/usr/bin/chromium-browser"        # Ubuntu/Debian
+# chromium_binary: "/usr/bin/google-chrome"           # Google Chrome
+# chromium_binary: "/usr/bin/google-chrome-stable"    # Google Chrome Stable
+default_profile: "Personal"
+profiles:
+  Work:
+    user_data_dir: "/home/micah/.config/brolaunch/chromium-work"
+    app_mode: false  # Default window mode for work browsing
+    patterns:
+      # Atlassian Cloud (company.atlassian.net)
+      - "\\.atlassian\\.net"
+      # Atlassian Server/Data Center (self-hosted)
+      - "jira\\."
+      - "confluence\\."
+      - "bitbucket\\."
+      - "bamboo\\."
+      - "fisheye\\."
+      - "crucible\\."
+      - "crowd\\."
+      # Atlassian Cloud direct domains
+      - "bitbucket\\.org"
+      - "opsgenie\\.com"
+      - "statuspage\\.io"
+      # Company-specific examples
+      - "github\\.com/company"
+      - "gitlab\\.company\\.com"
+      # General work domains
+      - "company\\.zoom\\.us"
+
+    app_patterns:
+      # These should open as apps for focused work
+      - "trello\\.com"
+      - "company\\.slack\\.com"
+      - "\\.atlassian\\.net/jira"
+  Personal:
+    user_data_dir: "/home/micah/.config/brolaunch/chromium-personal"
+    app_mode: false  # Default window mode
+    patterns:
+      - "reddit\\.com"
+      - "youtube\\.com" 
+    app_patterns:
+      # These work better as dedicated apps
+      - "gmail\\.com"
+      - "mail\\.google\\.com"
+      - "calendar\\.google\\.com"
+      - "drive\\.google\\.com"
+      - "docs\\.google\\.com"
