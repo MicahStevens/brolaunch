@@ -13,17 +13,36 @@ A smart Chromium launcher that automatically opens URLs with the right profile b
 
 ## Installation
 
-### Prerequisites
+### Install from Release (Recommended)
 
+Download the latest release for Linux x86_64:
+
+```bash
+# Download latest release
+wget https://github.com/MicahStevens/brolaunch/releases/latest/download/brolaunch-v0.1.0-x86_64-unknown-linux-gnu.tar.gz
+
+# Extract
+tar xzf brolaunch-v0.1.0-x86_64-unknown-linux-gnu.tar.gz
+
+# Install binary
+sudo cp brolaunch-*/brolaunch /usr/local/bin/
+# Or for user install:
+cp brolaunch-*/brolaunch ~/.local/bin/
+
+# Copy config template
+cp brolaunch-*/config.yaml ~/.config/brolaunch.yaml
+```
+
+### Build from Source
+
+Prerequisites:
 - Rust (latest stable)
-- Chromium or Google Chrome or other chromium based browsers with compatible CLI flags. 
+- Chromium or Google Chrome or other chromium based browsers with compatible CLI flags
 - FLTK dependencies for GUI (on most Linux distros, install `fltk-dev` or similar)
-
-### Build and Install
 
 ```bash
 # Clone and build
-git clone <repository-url>
+git clone https://github.com/MicahStevens/brolaunch.git
 cd brolaunch
 cargo build --release
 
