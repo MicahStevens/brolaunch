@@ -9,6 +9,9 @@ profiles:
   Work:
     user_data_dir: "/home/micah/.config/brolaunch/chromium-work"
     app_mode: false  # Default window mode for work browsing
+    cli_flags:  # Optional: Custom CLI flags for this profile
+      # - "--force-device-scale-factor=1.5"  # For HiDPI displays
+      # - "--high-dpi-support=1"             # Enable high DPI support
     patterns:
       # Atlassian Cloud (company.atlassian.net)
       - "\\.atlassian\\.net"
@@ -38,6 +41,11 @@ profiles:
   Personal:
     user_data_dir: "/home/micah/.config/brolaunch/chromium-personal"
     app_mode: false  # Default window mode
+    cli_flags:  # Optional: Custom CLI flags for this profile
+      # - "--force-device-scale-factor=1.25"  # For HiDPI displays
+      # - "--high-dpi-support=1"              # Enable high DPI support
+      # - "--enable-features=UseOzonePlatform"   # For Wayland
+      # - "--ozone-platform=wayland"             # Force Wayland backend
     patterns:
       - "reddit\\.com"
       - "youtube\\.com" 

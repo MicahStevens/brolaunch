@@ -1,5 +1,4 @@
 use clap::{Arg, Command as ClapCommand};
-use fltk::{app, button::Button, frame::Frame, prelude::*, window::Window};
 use regex::Regex;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -7,7 +6,9 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::process::Command;
-use std::sync::{Arc, Mutex};
+
+mod desktop_dialog;
+use desktop_dialog::{DesktopEnvironment, SessionType};
 
 #[derive(Debug, Deserialize)]
 struct ProfileConfig {
@@ -15,6 +16,7 @@ struct ProfileConfig {
     app_mode: Option<bool>,
     patterns: Option<Vec<String>>,
     app_patterns: Option<Vec<String>>,
+    cli_flags: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
@@ -91,11 +93,29 @@ fn match_profile(url: &str, config: &Config) -> Option<ProfileMatch> {
     None
 }
 
+fn should_include_flag(flag: &str, session_type: &SessionType) -> bool {
+    match session_type {
+        SessionType::X11 => {
+            // Filter out Wayland-specific flags when running on X11
+            !flag.contains("--ozone-platform=wayland") && 
+            !flag.contains("--enable-features=UseOzonePlatform")
+        }
+        SessionType::Wayland => {
+            // Include all flags on Wayland
+            true
+        }
+        SessionType::Unknown => {
+            // When session type is unknown, include all flags (safer default)
+            true
+        }
+    }
+}
+
 fn launch_chromium(binary: &str, profile: &str, url: Option<&str>, config: &Config, verbose: bool, app_mode: bool) {
     let mut cmd = Command::new(binary);
     let mut args = Vec::new();
     
-    // Check if profile has custom user_data_dir
+    // Check if profile has custom user_data_dir and cli_flags
     let mut user_data_dir_used = None;
     if let Some(profile_config) = config.profiles.get(profile) {
         if let Some(user_data_dir) = &profile_config.user_data_dir {
@@ -103,6 +123,19 @@ fn launch_chromium(binary: &str, profile: &str, url: Option<&str>, config: &Conf
             cmd.arg(&arg);
             args.push(arg);
             user_data_dir_used = Some(user_data_dir.clone());
+        }
+        
+        // Add custom CLI flags (with session-type filtering)
+        if let Some(cli_flags) = &profile_config.cli_flags {
+            let session_type = DesktopEnvironment::detect_session_type();
+            for flag in cli_flags {
+                if should_include_flag(flag, &session_type) {
+                    cmd.arg(flag);
+                    args.push(flag.clone());
+                } else if verbose {
+                    println!("🚫 Skipping flag '{}' (not compatible with {:?})", flag, session_type);
+                }
+            }
         }
     }
     
@@ -163,40 +196,6 @@ fn get_available_profiles(config: &Config) -> Vec<String> {
     config.profiles.keys().cloned().collect()
 }
 
-fn show_gui_chooser(profiles: &[String]) -> Option<String> {
-    let app = app::App::default();
-    let mut wind = Window::new(100, 100, 400, 300, "Choose Profile");
-    wind.make_modal(true);
-    wind.set_border(true);
-    
-    let mut frame = Frame::new(10, 10, 380, 50, "Select a Chromium profile:");
-    frame.set_label_size(16);
-
-    let selected_profile = Arc::new(Mutex::new(None::<String>));
-    let mut buttons = Vec::new();
-
-    for (i, profile) in profiles.iter().enumerate() {
-        let mut btn = Button::new(50, 80 + (i as i32 * 40), 300, 30, Some(profile.as_str()));
-        let profile_clone = profile.clone();
-        let selected_clone = Arc::clone(&selected_profile);
-        
-        btn.set_callback(move |_| {
-            *selected_clone.lock().unwrap() = Some(profile_clone.clone());
-            app::quit();
-        });
-        
-        buttons.push(btn);
-    }
-
-    wind.end();
-    wind.show();
-
-    app.run().unwrap();
-
-    // Extract the value without unwrapping the Arc
-    let result = selected_profile.lock().unwrap().clone();
-    result
-}
 
 fn main() {
     let matches = ClapCommand::new("brolaunch")
@@ -341,7 +340,7 @@ fn main() {
                 }
                 println!("No profile matched for URL: {}", url_or_profile);
                 
-                if let Some(selected_profile) = show_gui_chooser(&available_profiles) {
+                if let Some(selected_profile) = desktop_dialog::show_profile_chooser_with_debug(&available_profiles, verbose) {
                     if verbose {
                         println!("👆 User selected profile: {}", selected_profile);
                     }
