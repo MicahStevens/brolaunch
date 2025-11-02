@@ -3,15 +3,10 @@
 A smart browser launcher for Chromium and Firefox that automatically opens URLs with the right profile based on regex pattern matching, with GUI profile selection and app mode support (Chromium only).
 
 ## Features
-
-- 🌐 **Multi-browser support** - Works with both Chromium and Firefox
-- 🎯 **Automatic profile matching** - URLs are matched against regex patterns to select the appropriate profile
-- 🖥️ **GUI profile chooser** - When no patterns match, a clean GUI lets you choose from available profiles
-- 📱 **App mode support** - Launch URLs as dedicated app windows (Chromium only)
-- 🪟 **Hyprland integration** - Automatic window rules, workspace, and monitor management on Hyprland
-- 🔧 **Configurable** - Flexible YAML configuration with per-profile settings
-- 🗂️ **Custom user data directories** - Each profile can have its own isolated data directory
-- 📝 **Verbose logging** - Debug mode shows detailed execution information
+- simple configuration file driven
+- works with Firefox and Chrome
+- automatically routes URL's to profile based on regex routes in config file
+- unknown URLs pop up a GUI box to choose the profile
 
 ## Installation
 
