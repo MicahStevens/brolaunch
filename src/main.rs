@@ -10,6 +10,64 @@ use std::process::Command;
 mod desktop_dialog;
 use desktop_dialog::{DesktopEnvironment, SessionType};
 
+fn is_hyprland() -> bool {
+    if let Ok(desktop) = std::env::var("XDG_CURRENT_DESKTOP") {
+        desktop.to_lowercase().contains("hyprland")
+    } else {
+        false
+    }
+}
+
+fn apply_hyprland_rules(profile_config: &ProfileConfig, browser_type: &BrowserType, verbose: bool) {
+    if !is_hyprland() {
+        return;
+    }
+
+    let mut rules = Vec::new();
+
+    // Add workspace rule
+    if let Some(workspace) = &profile_config.hyprland_workspace {
+        match browser_type {
+            BrowserType::Chromium => {
+                rules.push(format!("windowrulev2 = workspace {},class:(chromium)", workspace));
+                rules.push(format!("windowrulev2 = workspace {},class:(google-chrome)", workspace));
+            }
+            BrowserType::Firefox => {
+                rules.push(format!("windowrulev2 = workspace {},class:(firefox)", workspace));
+            }
+        }
+    }
+
+    // Add monitor rule
+    if let Some(monitor) = &profile_config.hyprland_monitor {
+        match browser_type {
+            BrowserType::Chromium => {
+                rules.push(format!("windowrulev2 = monitor {},class:(chromium)", monitor));
+                rules.push(format!("windowrulev2 = monitor {},class:(google-chrome)", monitor));
+            }
+            BrowserType::Firefox => {
+                rules.push(format!("windowrulev2 = monitor {},class:(firefox)", monitor));
+            }
+        }
+    }
+
+    // Add custom window rules
+    if let Some(custom_rules) = &profile_config.hyprland_window_rules {
+        rules.extend(custom_rules.clone());
+    }
+
+    // Apply rules using hyprctl
+    for rule in rules {
+        if verbose {
+            println!("🔧 Applying Hyprland rule: {}", rule);
+        }
+        let _ = std::process::Command::new("hyprctl")
+            .arg("keyword")
+            .arg(&rule)
+            .status();
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 enum BrowserType {
@@ -24,6 +82,10 @@ struct ProfileConfig {
     patterns: Option<Vec<String>>,
     app_patterns: Option<Vec<String>>,
     cli_flags: Option<Vec<String>>,
+    // Hyprland-specific options
+    hyprland_workspace: Option<String>,
+    hyprland_monitor: Option<String>,
+    hyprland_window_rules: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
@@ -264,6 +326,10 @@ fn launch_browser(binary: &str, browser_type: &BrowserType, profile: &str, url: 
                 println!("{} launched with profile '{}' and URL", browser_name, profile);
             } else {
                 println!("{} launched with profile '{}'", browser_name, profile);
+            }
+            // Apply Hyprland window rules after successful launch
+            if let Some(profile_config) = config.profiles.get(profile) {
+                apply_hyprland_rules(profile_config, browser_type, verbose);
             }
         },
         Ok(status) => eprintln!("{} exited with status: {}", browser_name, status),

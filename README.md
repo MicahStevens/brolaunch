@@ -8,6 +8,7 @@ A smart browser launcher for Chromium and Firefox that automatically opens URLs 
 - 🎯 **Automatic profile matching** - URLs are matched against regex patterns to select the appropriate profile
 - 🖥️ **GUI profile chooser** - When no patterns match, a clean GUI lets you choose from available profiles
 - 📱 **App mode support** - Launch URLs as dedicated app windows (Chromium only)
+- 🪟 **Hyprland integration** - Automatic window rules, workspace, and monitor management on Hyprland
 - 🔧 **Configurable** - Flexible YAML configuration with per-profile settings
 - 🗂️ **Custom user data directories** - Each profile can have its own isolated data directory
 - 📝 **Verbose logging** - Debug mode shows detailed execution information
@@ -20,10 +21,10 @@ Download the latest release for Linux x86_64:
 
 ```bash
 # Download latest release
-wget https://github.com/MicahStevens/brolaunch/releases/latest/download/brolaunch-v0.1.0-x86_64-unknown-linux-gnu.tar.gz
+wget https://github.com/MicahStevens/brolaunch/releases/latest/download/brolaunch-v0.2.0-x86_64-unknown-linux-gnu.tar.gz
 
 # Extract
-tar xzf brolaunch-v0.1.0-x86_64-unknown-linux-gnu.tar.gz
+tar xzf brolaunch-v0.2.0-x86_64-unknown-linux-gnu.tar.gz
 
 # Install binary
 sudo cp brolaunch-*/brolaunch /usr/local/bin/
@@ -188,6 +189,9 @@ profiles:
 | `patterns` | array | Regex patterns for URLs that open in browser windows | none |
 | `app_patterns` | array | Regex patterns for URLs that open as app windows (Chromium only) | none |
 | `cli_flags` | array | Additional CLI flags to pass to the browser | none |
+| `hyprland_workspace` | string | Workspace to launch browser on (Hyprland only) | none |
+| `hyprland_monitor` | string | Monitor to launch browser on (Hyprland only) | none |
+| `hyprland_window_rules` | array | Custom Hyprland window rules to apply | none |
 
 ### Pattern Matching
 
@@ -221,6 +225,19 @@ patterns:
 - Slack, Teams, Discord (Communication)
 - Trello, Notion, Asana (Productivity)
 - Jira, Confluence (Atlassian tools)
+
+### Hyprland Integration
+
+When running on Hyprland, brolaunch automatically applies window rules to improve the browsing experience:
+
+- **Workspace assignment** - Launch browsers on specific workspaces
+- **Monitor targeting** - Direct windows to specific monitors
+- **Custom window rules** - Apply any Hyprland window rule for fine-tuned control
+
+**Hyprland features work automatically when:**
+- Running on Hyprland (detected via `XDG_CURRENT_DESKTOP`)
+- `hyprctl` command is available
+- Profile configuration includes Hyprland options
 
 ## Examples
 
@@ -274,12 +291,25 @@ profiles:
       - "gmail\\.com"
       - "calendar\\.google\\.com"
 
-  Client:
-    user_data_dir: "/home/user/.config/brolaunch/client"
-    patterns:
-      - "client\\.com"
-      - "clientproject\\."
-```
+   Client:
+     user_data_dir: "/home/user/.config/brolaunch/client"
+     patterns:
+       - "client\\.com"
+       - "clientproject\\."
+
+   # Hyprland-optimized profile example
+   Floating:
+     user_data_dir: "/home/user/.config/brolaunch/floating"
+     patterns:
+       - "notion\\.so"
+       - "figma\\.com"
+     hyprland_workspace: "3"  # Always open on workspace 3
+     hyprland_monitor: "DP-1"  # Open on primary monitor
+     hyprland_window_rules:
+       - "windowrulev2 = float,class:(chromium)"  # Float all windows
+       - "windowrulev2 = size 1200 800,class:(chromium)"  # Set default size
+       - "windowrulev2 = center,class:(chromium)"  # Center on screen
+ ```
 
 ## Troubleshooting
 
@@ -308,6 +338,12 @@ chromium_binary: "/usr/bin/chromium-browser"   # Ubuntu
 - For Firefox, `user_data_dir` must point to an existing profile directory (e.g., `~/.mozilla/firefox/xyz.default`)
 - Alternatively, use profile name with `-P` flag (profile must exist in Firefox's profile manager)
 - To create a new Firefox profile: `firefox -ProfileManager`
+
+**Hyprland window rules not applying:**
+- Ensure you're running on Hyprland (check `XDG_CURRENT_DESKTOP=hyprland`)
+- Verify `hyprctl` command is available in PATH
+- Use `-v` flag to see if Hyprland rules are being applied
+- Rules are applied after browser launch, so window may appear briefly before rules take effect
 
 **Profile not found:**
 - Use `-v` flag to see available profiles

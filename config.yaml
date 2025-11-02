@@ -19,12 +19,18 @@ profiles:
     # For Firefox: path to Firefox profile directory (e.g., ~/.mozilla/firefox/xyz.default)
     user_data_dir: "/home/micah/.config/brolaunch/chromium-work"
     app_mode: false  # Default window mode (Chromium only, ignored for Firefox)
-    cli_flags:  # Optional: Custom CLI flags for this profile
-      # Chromium flags:
-      # - "--force-device-scale-factor=1.5"  # For HiDPI displays
-      # - "--high-dpi-support=1"             # Enable high DPI support
-      # Firefox flags:
-      # - "--new-instance"                   # Open new Firefox instance
+     cli_flags:  # Optional: Custom CLI flags for this profile
+       # Chromium flags:
+       # - "--force-device-scale-factor=1.5"  # For HiDPI displays
+       # - "--high-dpi-support=1"             # Enable high DPI support
+       # Firefox flags:
+       # - "--new-instance"                   # Open new Firefox instance
+     # Hyprland-specific options (only applied when running on Hyprland)
+     hyprland_workspace: "2"  # Launch on workspace 2
+     hyprland_monitor: "DP-1"  # Launch on specific monitor
+     hyprland_window_rules:  # Custom window rules
+       # - "windowrulev2 = float,class:(chromium)"  # Float work browser windows
+       # - "windowrulev2 = size 1200 800,class:(chromium)"  # Set window size
     patterns:
       # Atlassian Cloud (company.atlassian.net)
       - "\\.atlassian\\.net"

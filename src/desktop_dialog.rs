@@ -7,6 +7,7 @@ pub enum DialogType {
     Zenity,
     Wofi,
     Fuzzel,
+    Hyprpicker,
     Terminal,
 }
 
@@ -107,7 +108,24 @@ impl DesktopEnvironment {
                     return DialogType::Kdialog;
                 }
             }
-            name if name.contains("hyprland") || name.contains("sway") || name.contains("river") => {
+            name if name.contains("hyprland") => {
+                if *session_type == SessionType::Wayland {
+                    if Self::command_exists("hyprpicker") {
+                        return DialogType::Hyprpicker;
+                    } else if Self::command_exists("wofi") {
+                        return DialogType::Wofi;
+                    } else if Self::command_exists("fuzzel") {
+                        return DialogType::Fuzzel;
+                    } else if Self::command_exists("zenity") {
+                        return DialogType::Zenity; // via XWayland
+                    }
+                } else if Self::command_exists("zenity") {
+                    return DialogType::Zenity;
+                } else if Self::command_exists("kdialog") {
+                    return DialogType::Kdialog;
+                }
+            }
+            name if name.contains("sway") || name.contains("river") => {
                 if *session_type == SessionType::Wayland {
                     if Self::command_exists("wofi") {
                         return DialogType::Wofi;
@@ -167,6 +185,7 @@ pub fn show_profile_chooser_with_debug(profiles: &[String], verbose: bool) -> Op
         DialogType::Zenity => show_zenity_chooser(profiles),
         DialogType::Wofi => show_wofi_chooser(profiles),
         DialogType::Fuzzel => show_fuzzel_chooser(profiles),
+        DialogType::Hyprpicker => show_hyprpicker_chooser(profiles),
         DialogType::Terminal => show_terminal_chooser(profiles),
     }
 }
@@ -295,16 +314,43 @@ fn show_fuzzel_chooser(profiles: &[String]) -> Option<String> {
     }
 }
 
+fn show_hyprpicker_chooser(profiles: &[String]) -> Option<String> {
+    // Hyprpicker is primarily for color picking, but we can use it creatively
+    // For now, fall back to terminal chooser but with Hyprland-specific messaging
+    println!("\n🪟 Hyprland Profile Selector");
+    println!("Available profiles:");
+    for (i, profile) in profiles.iter().enumerate() {
+        println!("  {}: {}", i + 1, profile);
+    }
+
+    print!("Select profile (1-{}): ", profiles.len());
+    use std::io::{self, Write};
+    let _ = io::stdout().flush();
+
+    let mut input = String::new();
+    match io::stdin().read_line(&mut input) {
+        Ok(_) => {
+            if let Ok(index) = input.trim().parse::<usize>() {
+                if index > 0 && index <= profiles.len() {
+                    return Some(profiles[index - 1].clone());
+                }
+            }
+            None
+        }
+        _ => None,
+    }
+}
+
 fn show_terminal_chooser(profiles: &[String]) -> Option<String> {
     println!("\nAvailable profiles:");
     for (i, profile) in profiles.iter().enumerate() {
         println!("  {}: {}", i + 1, profile);
     }
-    
+
     print!("Select profile (1-{}): ", profiles.len());
     use std::io::{self, Write};
     let _ = io::stdout().flush();
-    
+
     let mut input = String::new();
     match io::stdin().read_line(&mut input) {
         Ok(_) => {
