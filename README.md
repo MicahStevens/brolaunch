@@ -1,12 +1,13 @@
 # brolaunch
 
-A smart Chromium launcher that automatically opens URLs with the right profile based on regex pattern matching, with GUI profile selection and app mode support.
+A smart browser launcher for Chromium and Firefox that automatically opens URLs with the right profile based on regex pattern matching, with GUI profile selection and app mode support (Chromium only).
 
 ## Features
 
-- 🎯 **Automatic profile matching** - URLs are matched against regex patterns to select the appropriate Chromium profile
+- 🌐 **Multi-browser support** - Works with both Chromium and Firefox
+- 🎯 **Automatic profile matching** - URLs are matched against regex patterns to select the appropriate profile
 - 🖥️ **GUI profile chooser** - When no patterns match, a clean GUI lets you choose from available profiles
-- 📱 **App mode support** - Launch URLs as dedicated app windows (no address bar, tabs, etc.)
+- 📱 **App mode support** - Launch URLs as dedicated app windows (Chromium only)
 - 🔧 **Configurable** - Flexible YAML configuration with per-profile settings
 - 🗂️ **Custom user data directories** - Each profile can have its own isolated data directory
 - 📝 **Verbose logging** - Debug mode shows detailed execution information
@@ -37,7 +38,7 @@ cp brolaunch-*/config.yaml ~/.config/brolaunch.yaml
 
 Prerequisites:
 - Rust (latest stable)
-- Chromium or Google Chrome or other chromium based browsers with compatible CLI flags
+- Chromium, Google Chrome, Firefox, or other Chromium-based browsers
 - FLTK dependencies for GUI (on most Linux distros, install `fltk-dev` or similar)
 
 ```bash
@@ -92,6 +93,7 @@ brolaunch -c /path/to/config.yaml https://example.com
 | `-c, --config <FILE>` | Path to config file (default: `~/.config/brolaunch.yaml` or `./config.yaml`) |
 | `-v, --verbose` | Enable verbose logging (shows config file used, pattern matching, command execution) |
 | `--app` | Launch URL as an app window (creates app-like window without browser UI) |
+| `-e, --existing` | Open URL in newest existing window for the profile (if any) |
 | `-h, --help` | Show help message |
 | `-V, --version` | Show version |
 
@@ -108,11 +110,19 @@ brolaunch looks for configuration files in this order:
 ### Configuration Syntax
 
 ```yaml
+# Browser type: "chromium" or "firefox" (optional, defaults to "chromium")
+browser_type: chromium
+
 # Path to Chromium binary (optional, defaults to "chromium")
 # Use direct binary path to avoid wrapper script issues
 chromium_binary: "/usr/lib/chromium/chromium"  # Arch Linux
 # chromium_binary: "/usr/bin/chromium-browser"  # Ubuntu/Debian
 # chromium_binary: "/usr/bin/google-chrome"     # Google Chrome
+
+# Path to Firefox binary (optional, defaults to "firefox")
+firefox_binary: "firefox"
+# firefox_binary: "/usr/bin/firefox"
+# firefox_binary: "/usr/lib/firefox/firefox"
 
 # Default profile to use when no arguments provided (optional)
 default_profile: "Personal"
@@ -121,9 +131,12 @@ default_profile: "Personal"
 profiles:
   Work:
     # Custom user data directory for this profile (optional)
+    # For Chromium: custom profile directory
+    # For Firefox: path to Firefox profile directory (e.g., ~/.mozilla/firefox/xyz.default)
     user_data_dir: "/home/user/.config/brolaunch/chromium-work"
     
     # Default app mode for this profile (optional, defaults to false)
+    # Note: app_mode is only supported for Chromium, ignored for Firefox
     app_mode: false
     
     # URL patterns that open in regular browser windows
@@ -136,6 +149,7 @@ profiles:
       - "confluence\\."
     
     # URL patterns that automatically open as app windows
+    # Note: app_patterns only work with Chromium, treated as regular patterns for Firefox
     app_patterns:
       - "company\\.slack\\.com"
       - "trello\\.com"
@@ -160,17 +174,20 @@ profiles:
 
 | Option | Type | Description | Default |
 |--------|------|-------------|---------|
+| `browser_type` | string | Browser to use: `"chromium"` or `"firefox"` | `"chromium"` |
 | `chromium_binary` | string | Path to Chromium/Chrome binary | `"chromium"` |
+| `firefox_binary` | string | Path to Firefox binary | `"firefox"` |
 | `default_profile` | string | Profile to use when no arguments provided | none |
 
 #### Profile Options
 
 | Option | Type | Description | Default |
 |--------|------|-------------|---------|
-| `user_data_dir` | string | Custom user data directory for this profile | Chromium default |
-| `app_mode` | boolean | Default app mode for this profile's regular patterns | `false` |
+| `user_data_dir` | string | Custom user data directory (Chromium) or profile path (Firefox) | Browser default |
+| `app_mode` | boolean | Default app mode for regular patterns (Chromium only) | `false` |
 | `patterns` | array | Regex patterns for URLs that open in browser windows | none |
-| `app_patterns` | array | Regex patterns for URLs that open as app windows | none |
+| `app_patterns` | array | Regex patterns for URLs that open as app windows (Chromium only) | none |
+| `cli_flags` | array | Additional CLI flags to pass to the browser | none |
 
 ### Pattern Matching
 
@@ -192,10 +209,12 @@ patterns:
 
 ### App Mode vs Window Mode
 
+**Note: App mode is only available for Chromium-based browsers. Firefox will always open in window mode.**
+
 | Mode | Use Case | UI | Behavior |
 |------|----------|----| ---------|
 | **Window Mode** | General browsing | Full browser (address bar, tabs, bookmarks) | Opens in new window, can have multiple tabs |
-| **App Mode** | Web applications | Minimal UI (no address bar, no tabs) | Dedicated app-like window, single purpose |
+| **App Mode** (Chromium only) | Web applications | Minimal UI (no address bar, no tabs) | Dedicated app-like window, single purpose |
 
 **App Mode is perfect for:**
 - Gmail, Calendar, Drive (Google Workspace)
@@ -220,9 +239,13 @@ brolaunch https://github.com/company/repo
 brolaunch work
 # → Opens Work profile without URL
 
-# Force app mode for any URL
+# Force app mode for any URL (Chromium only)
 brolaunch --app https://notion.so
-# → Opens in app mode regardless of patterns
+# → Opens in app mode regardless of patterns (ignored for Firefox)
+
+# Open in existing window
+brolaunch --existing https://github.com/company/repo
+# → Opens in newest existing window for matched profile, or launches new if none
 
 # Debug pattern matching
 brolaunch -v https://example.com
@@ -277,8 +300,14 @@ chromium_binary: "/usr/bin/chromium-browser"   # Ubuntu
 - For Hyprland/other Wayland compositors, modal windows typically float by default
 
 **App mode not working:**
+- App mode is only supported for Chromium-based browsers, not Firefox
 - Ensure you're using `--app` flag or `app_patterns` in config
 - Some websites may not work well in app mode
+
+**Firefox profile issues:**
+- For Firefox, `user_data_dir` must point to an existing profile directory (e.g., `~/.mozilla/firefox/xyz.default`)
+- Alternatively, use profile name with `-P` flag (profile must exist in Firefox's profile manager)
+- To create a new Firefox profile: `firefox -ProfileManager`
 
 **Profile not found:**
 - Use `-v` flag to see available profiles

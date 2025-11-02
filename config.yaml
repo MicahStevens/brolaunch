@@ -1,17 +1,30 @@
+browser_type: chromium  # or "firefox"
+
 chromium_binary: "/usr/lib/chromium/chromium"
 # Alternative chromium binary paths for different distros:
 # chromium_binary: "/usr/lib/chromium/chromium"        # Arch Linux (avoids wrapper)
 # chromium_binary: "/usr/bin/chromium-browser"        # Ubuntu/Debian
 # chromium_binary: "/usr/bin/google-chrome"           # Google Chrome
 # chromium_binary: "/usr/bin/google-chrome-stable"    # Google Chrome Stable
+
+firefox_binary: "firefox"
+# Alternative firefox binary paths:
+# firefox_binary: "/usr/bin/firefox"
+# firefox_binary: "/usr/lib/firefox/firefox"
+
 default_profile: "Personal"
 profiles:
   Work:
+    # For Chromium: custom profile directory
+    # For Firefox: path to Firefox profile directory (e.g., ~/.mozilla/firefox/xyz.default)
     user_data_dir: "/home/micah/.config/brolaunch/chromium-work"
-    app_mode: false  # Default window mode for work browsing
+    app_mode: false  # Default window mode (Chromium only, ignored for Firefox)
     cli_flags:  # Optional: Custom CLI flags for this profile
+      # Chromium flags:
       # - "--force-device-scale-factor=1.5"  # For HiDPI displays
       # - "--high-dpi-support=1"             # Enable high DPI support
+      # Firefox flags:
+      # - "--new-instance"                   # Open new Firefox instance
     patterns:
       # Atlassian Cloud (company.atlassian.net)
       - "\\.atlassian\\.net"
@@ -34,18 +47,21 @@ profiles:
       - "company\\.zoom\\.us"
 
     app_patterns:
-      # These should open as apps for focused work
+      # These should open as apps for focused work (Chromium only)
       - "trello\\.com"
       - "company\\.slack\\.com"
       - "\\.atlassian\\.net/jira"
   Personal:
     user_data_dir: "/home/micah/.config/brolaunch/chromium-personal"
-    app_mode: false  # Default window mode
+    app_mode: false  # Default window mode (Chromium only, ignored for Firefox)
     cli_flags:  # Optional: Custom CLI flags for this profile
+      # Chromium flags:
       # - "--force-device-scale-factor=1.25"  # For HiDPI displays
       # - "--high-dpi-support=1"              # Enable high DPI support
       # - "--enable-features=UseOzonePlatform"   # For Wayland
       # - "--ozone-platform=wayland"             # Force Wayland backend
+      # Firefox flags:
+      # - "--new-instance"
     patterns:
       - "reddit\\.com"
       - "youtube\\.com" 

@@ -154,10 +154,6 @@ impl DesktopEnvironment {
     }
 }
 
-pub fn show_profile_chooser(profiles: &[String]) -> Option<String> {
-    show_profile_chooser_with_debug(profiles, false)
-}
-
 pub fn show_profile_chooser_with_debug(profiles: &[String], verbose: bool) -> Option<String> {
     let desktop_env = DesktopEnvironment::detect();
     
